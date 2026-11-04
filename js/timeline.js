@@ -107,11 +107,12 @@ export class Timeline {
     const steps = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300], major = steps.find((s) => s * this.pps >= 70) || 600, minor = major / 5;
     x.font = '10px Inter,system-ui'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
     const first = Math.floor(this.x2t(this.head) / minor) * minor;
-    for (let t = Math.max(0, first); this.t2x(t) < W; t += minor) {
-      const px = this.t2x(t), isM = Math.abs(t / major - Math.round(t / major)) < 1e-6;
+    // Counting ticks instead of adding up the step keeps 1.0 from arriving as 0.9999, which printed the wrong second.
+    for (let n = Math.max(0, Math.round(first / minor)); this.t2x(n * minor) < W; n++) {
+      const t = n * minor, px = this.t2x(t), isM = n % 5 === 0;
       if (px < this.head) continue;
       x.fillStyle = isM ? '#50545e' : '#2c2f36'; x.fillRect(Math.round(px), isM ? 14 : 20, 1, isM ? 12 : 6);
-      if (isM) { x.fillStyle = COL.rulerText; x.fillText(fmtTime(t) + (major < 1 ? '.' + Math.round((t % 1) * 10) : ''), px + 4, 12); }
+      if (isM) { x.fillStyle = COL.rulerText; x.fillText(fmtTime(t + 1e-6) + (major < 1 ? '.' + Math.round((t % 1) * 10) : ''), px + 4, 12); }
     }
     for (const m of P.markers || []) {
       const px = this.t2x(m); if (px < this.head || px > W) continue;
